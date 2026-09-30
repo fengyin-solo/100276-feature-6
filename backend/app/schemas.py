@@ -19,6 +19,7 @@ class ActionResult(BaseModel):
     ok: bool
     message: str
     entry: dict[str, Any] | None = None
+    code: str | None = None  # merged 归并 / jump_returned 越档退回 / no_reading 读数取不到 等
 
 
 class EntryPayload(BaseModel):
