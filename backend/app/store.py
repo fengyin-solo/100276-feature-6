@@ -31,11 +31,21 @@ class Store:
         modules: list[dict[str, object]] = []
         for name in self.module_names():
             rows = self.rows(name)
+            # 报警单表是冷藏箱监控的记录链明细，看板计数并入冷藏箱模块、不单独成行，
+            # 保证处置看板的未完结条数与监控明细同源、同口径实时重算。
+            scope_rows = list(rows)
+            created = len(rows)
+            if name == "coldchain":
+                alarm_rows = self.rows("coldchain_alarm")
+                scope_rows.extend(alarm_rows)
+                created += len(alarm_rows)
+            if name == "coldchain_alarm":
+                continue
             modules.append({
                 "name": name,
-                "created": len(rows),
-                "pending": sum(1 for row in rows if row.get("pending")),
-                "abnormal": sum(1 for row in rows if row.get("abnormal")),
+                "created": created,
+                "pending": sum(1 for row in scope_rows if row.get("pending")),
+                "abnormal": sum(1 for row in scope_rows if row.get("abnormal")),
             })
         cards = [
             {"label": "业务模块", "value": len(modules)},
